@@ -11,78 +11,108 @@ var usersRouter = require('./routes/users');
 
 var app = express();
 
+/*
+    AWS: List directories
+    For each object in a specified directory
+    upload that object to rackspace
+    
+    TODO: Create a testing file
+    TODO: Create robust JS classes for both Rackspace and Aws.
 
+*/
 
+var pkgcloud = require('pkgcloud');
 
-
-
-
-
-var credentials = require('./credentials');
-var AWS = require('aws-sdk');
-
-console.log(credentials.user);
-AWS.config.update({
-    accessKeyId: "AKIAJTXN5JBFSQUOZFYA ",
-    secretAccessKey: "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",
+var client = pkgcloud.providers.rackspace.compute.createClient({
+    username: 'my-username',
+    apiKey: 'my-api-key',
+    service: 'compute',
+    region: 'IAD'
 });
 
-var s3 = new AWS.S3();
+client.getServers(function(err, servers) {
+    if (err) {
+        // handle your error case
+    }
+
+    // print out each server id
+    servers.forEach(function(server) {
+        console.log(server.id);
+    });
+});
+
+
+
+function uploadAwsFiles() {
+
+    var credentials = require('./credentials');
+    var AWS = require('aws-sdk');
+
+    console.log(credentials.user);
+    AWS.config.update({
+        accessKeyId: credentials.user.accessKeyId,
+        secretAccessKey: credentials.user.secretAccessKey,
+    });
+
+    var s3 = new AWS.S3();
 
 // Bucket names must be unique across all S3 users
 
-var bucket = 'gigofbuffalos';
+    var bucket = 'gigofbuffalos';
 
-var key = 'buffalo.jpg';
-
-
-let params = {Bucket: bucket, Key: key};
+    var key = 'buffalo.jpg';
 
 
-s3.getObject( params, function(err, data) {
-    // Handle any error and exit
-    if (err)
-        console.log( err );
-
-    // No error happened
-    // Convert Body from a Buffer to a String
-
-    console.log('Grabbed buffalo picture from aws... creating 1gig worth. (100 copies');
-    params.Body = data.Body;
-
-    const NS_PER_SEC = 1e9;
-    const MS_PER_NS = 1e-6
-    const time = process.hrtime();
-
-    //Benchmark took 27131967175 nanoseconds
-    // Benchmark took 27131.967174999998 milliseconds
-    for( var x=1; x < 100000; x++) {
-
-        params.Key = 'buffalo' + x + '.jpg';
-        s3.putObject(params, function(err, data) {
-
-            if (err) {
-
-                console.log(err)
-
-            } else {
+    let params = {Bucket: bucket, Key: key};
 
 
+    s3.getObject( params, function(err, data) {
+        // Handle any error and exit
+        if (err)
+            console.log( err );
+
+        // No error happened
+        // Convert Body from a Buffer to a String
+
+        console.log('Grabbed buffalo picture from aws... creating 1gig worth. (100 copies');
+        params.Body = data.Body;
+
+        const NS_PER_SEC = 1e9;
+        const MS_PER_NS = 1e-6
+        const time = process.hrtime();
+
+        //Benchmark took 27131967175 nanoseconds
+        // Benchmark took 27131.967174999998 milliseconds
+        for( var x=1; x < 1; x++) {
+
+            params.Key = 'buffalo' + x + '.jpg';
+            s3.putObject(params, function(err, data) {
+
+                if (err) {
+
+                    console.log(err)
+
+                } else {
+                    console.log('test');
+
+                }
+            });
+
+            if( (x % 1000) === 0 ) {
+                console.log("Buffalos have reached " + x);
             }
-        });
-
-        if( (x % 1000) === 0 ) {
-            console.log("Buffalos have reached " + x);
         }
-    }
 
-    const diff = process.hrtime(time);
-    console.log(`Benchmark took ${diff[0] * NS_PER_SEC + diff[1]} nanoseconds`);
-    console.log(`Benchmark took ${ (diff[0] * NS_PER_SEC + diff[1])  * MS_PER_NS } milliseconds`);
-
+        const diff = process.hrtime(time);
+        console.log(`Benchmark took ${diff[0] * NS_PER_SEC + diff[1]} nanoseconds`);
+        console.log(`Benchmark took ${ (diff[0] * NS_PER_SEC + diff[1])  * MS_PER_NS } milliseconds`);
 
 
-});
+
+    });
+}
+
+
 
 
 
