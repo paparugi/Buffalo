@@ -15,164 +15,190 @@ var app = express();
 
 
 
-function s3Cloud ( user ) {
-    this.accessKeyId = user.accessKeyId;
-    this.secretAccessKey = user.secretAccessKey;
-    this.cloudType = user.cloudType;
-
-    try{
-
-        this.s3Client = createConnection( this.accessKeyId, this.secretAccessKey );;
-
-    } catch( e ) {
-        //Update view to indicate a connection could not be made with given credentials.
-        console.log(e);
-    }
-
-    this.directories =  listDirectories( this.s3Client ).then(function (data) {
-        directories = data;
-    });
-
-
-    console.log( this.directories );
-
-    function createConnection ( accessKeyId, secretAccessKey ) {
-        console.log('createConnection() AWS');
-
-        //Possibly change this so each s3 cloud updates config eavh time and only pulls in aws once? If there are 2 s3Cloud objects..
-        //Function called on construction
-
-        let AWS = require('aws-sdk');
-
-        let credentials = {accessKeyId: accessKeyId, secretAccessKey: secretAccessKey};
-
-        AWS.config.update(credentials);
-
-        this.s3Client = new AWS.S3();
-
-        return s3Client;
-    }
-
-    function listDirectories ( s3Client ) {
-        console.log('listDirectories()');
-
-        s3Client.listBuckets(function (err, data) {
-
-            if (err) {
-
-                console.log(err)
-
-            } else {
-                data;
-            }
-
-        });
-    }
-
-    function setDirectories ( data ) {
-        console.log('setDirectories()');
 
 
 
-    }
+var credentials = require('./credentials');
+var AWS = require('aws-sdk');
 
-
-
-    function getDirectories ( s3Client, fn ) {
-        console.log('getDirectories()');
-
-        s3Client.listBuckets( function(err, data) {
-
-            if (err) {
-
-                console.log(err)
-
-            } else {
-
-                fn(data);
-                console.log("Successfully uploaded data to myBucket/myKey");
-
-            }
-
-        });
-    }
-}
-
-var cloud = new s3Cloud(user);
-console.log(cloud.connectionVerified);
-
-//
-// var AWS = require('aws-sdk');
-//
-// AWS.config.update({
-//     accessKeyId: "AKIAJTXN5JBFSQUOZFYA ",
-//     secretAccessKey: "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",
-// });
-//
-// var s3 = new AWS.S3();
-//
-// // Bucket names must be unique across all S3 users
-//
-// var myBucket = 'amazonherdtest3';
-//
-// var myKey = 'myBucketKey';
-//
-// s3.createBucket({Bucket: myBucket}, function(err, data) {
-//
-//     if (err) {
-//
-//         console.log(err);
-//
-//     } else {
-//
-//         params = {Bucket: myBucket, Key: myKey, Body: 'Hello!'};
-//
-//         s3.putObject(params, function(err, data) {
-//
-//             if (err) {
-//
-//                 console.log(err)
-//
-//             } else {
-//
-//                 console.log("Successfully uploaded data to myBucket/myKey");
-//
-//             }
-//
-//         });
-//
-//     }
-//
-// });
-
-
-
-var MongoClient = require('mongodb').MongoClient;
-
-MongoClient.connect(uri, function(err, client) {
-    console.log("Connected successfully to server");
-
-    const db = client.db(dbName);
-
-    insertDocuments(db, function() {
-        client.close();
-    });
+console.log(credentials.user);
+AWS.config.update({
+    accessKeyId: "AKIAJTXN5JBFSQUOZFYA ",
+    secretAccessKey: "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",
 });
 
-const insertDocuments = function(db, callback) {
-    // Get the documents collection
-    const collection = db.collection('glossary');
-    // Insert some documents
-    collection.insertMany([
-        {a : 1}, {a : 2}, {a : 3}
-    ], function(err, result) {
-        assert.equal(err, null);
-        assert.equal(3, result.result.n);
-        assert.equal(3, result.ops.length);
-        console.log("Inserted 3 documents into the collection");
-        callback(result);
-    });
+var s3 = new AWS.S3();
+
+// Bucket names must be unique across all S3 users
+
+var bucket = 'gigofbuffalos';
+
+var key = 'buffalo.jpg';
+
+
+let params = {Bucket: bucket, Key: key};
+
+
+s3.getObject( params, function(err, data) {
+    // Handle any error and exit
+    if (err)
+        console.log( err );
+
+    // No error happened
+    // Convert Body from a Buffer to a String
+
+    console.log('Grabbed buffalo picture from aws... creating 1gig worth. (100 copies');
+    params.Body = data.Body;
+
+    const NS_PER_SEC = 1e9;
+    const MS_PER_NS = 1e-6
+    const time = process.hrtime();
+
+    //Benchmark took 27131967175 nanoseconds
+    // Benchmark took 27131.967174999998 milliseconds
+    for( var x=1; x < 100000; x++) {
+
+        params.Key = 'buffalo' + x + '.jpg';
+        s3.putObject(params, function(err, data) {
+
+            if (err) {
+
+                console.log(err)
+
+            } else {
+
+
+            }
+        });
+
+        if( (x % 1000) === 0 ) {
+            console.log("Buffalos have reached " + x);
+        }
+    }
+
+    const diff = process.hrtime(time);
+    console.log(`Benchmark took ${diff[0] * NS_PER_SEC + diff[1]} nanoseconds`);
+    console.log(`Benchmark took ${ (diff[0] * NS_PER_SEC + diff[1])  * MS_PER_NS } milliseconds`);
+
+
+
+});
+
+
+
+
+function ideasForClasses() {
+
+    function s3Cloud ( user ) {
+        this.accessKeyId = user.accessKeyId;
+        this.secretAccessKey = user.secretAccessKey;
+        this.cloudType = user.cloudType;
+
+        try{
+
+            this.s3Client = createConnection( this.accessKeyId, this.secretAccessKey );;
+
+        } catch( e ) {
+            //Update view to indicate a connection could not be made with given credentials.
+            console.log(e);
+        }
+
+        this.directories =  listDirectories( this.s3Client ).then(function (data) {
+            directories = data;
+        });
+
+
+        console.log( this.directories );
+
+        function createConnection ( accessKeyId, secretAccessKey ) {
+            console.log('createConnection() AWS');
+
+            //Possibly change this so each s3 cloud updates config eavh time and only pulls in aws once? If there are 2 s3Cloud objects..
+            //Function called on construction
+
+            let AWS = require('aws-sdk');
+
+            let credentials = {accessKeyId: accessKeyId, secretAccessKey: secretAccessKey};
+
+            AWS.config.update(credentials);
+
+            this.s3Client = new AWS.S3();
+
+            return s3Client;
+        }
+
+        function listDirectories ( s3Client ) {
+            console.log('listDirectories()');
+
+            s3Client.listBuckets(function (err, data) {
+
+                if (err) {
+
+                    console.log(err)
+
+                } else {
+                    data;
+                }
+
+            });
+        }
+
+        function setDirectories ( data ) {
+            console.log('setDirectories()');
+
+
+
+        }
+
+
+
+        function getDirectories ( s3Client, fn ) {
+            console.log('getDirectories()');
+
+            s3Client.listBuckets( function(err, data) {
+
+                if (err) {
+
+                    console.log(err)
+
+                } else {
+
+                    fn(data);
+                    console.log("Successfully uploaded data to myBucket/myKey");
+
+                }
+
+            });
+        }
+    }
 }
+
+// var MongoClient = require('mongodb').MongoClient;
+//
+// MongoClient.connect(uri, function(err, client) {
+//     console.log("Connected successfully to server");
+//
+//     const db = client.db(dbName);
+//
+//     insertDocuments(db, function() {
+//         client.close();
+//     });
+// });
+
+// const insertDocuments = function(db, callback) {
+//     // Get the documents collection
+//     const collection = db.collection('glossary');
+//     // Insert some documents
+//     collection.insertMany([
+//         {a : 1}, {a : 2}, {a : 3}
+//     ], function(err, result) {
+//         assert.equal(err, null);
+//         assert.equal(3, result.result.n);
+//         assert.equal(3, result.ops.length);
+//         console.log("Inserted 3 documents into the collection");
+//         callback(result);
+//     });
+// }
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
