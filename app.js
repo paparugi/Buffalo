@@ -12,34 +12,21 @@ var usersRouter = require('./routes/users');
 var app = express();
 
 /*
-    AWS: List directories
-    For each object in a specified directory
-    upload that object to rackspace
-    
-    TODO: Create a testing file
-    TODO: Create robust JS classes for both Rackspace and Aws.
-
+    TODO: Create robust JS classe for Aws, get MVP working s3->s3.
 */
 
-var pkgcloud = require('pkgcloud');
 
-var client = pkgcloud.providers.rackspace.compute.createClient({
-    username: 'my-username',
-    apiKey: 'my-api-key',
-    service: 'compute',
-    region: 'IAD'
-});
 
-client.getServers(function(err, servers) {
-    if (err) {
-        // handle your error case
-    }
 
-    // print out each server id
-    servers.forEach(function(server) {
-        console.log(server.id);
-    });
-});
+var shepard = require('./shepard');
+var credentials = require('./credentials');
+var source = shepard.cloudFactory.issue('s3', credentials);
+console.log(source);
+shepard.s3Cloud.test();
+
+// console.log( source.printObjects( 'gigofbuffalos', ' ') );
+
+
 
 
 
