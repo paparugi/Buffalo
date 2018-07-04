@@ -12,7 +12,9 @@ var usersRouter = require('./routes/users');
 var app = express();
 
 /*
-    TODO: Create robust JS classe for Aws, get MVP working s3->s3.
+    TODO: Create mvp...
+    -Should move files and directories from a directory, to a new destination directory from another cloud.
+    -Create new folder in other mvp. This is all mover.io does.
 */
 
 
@@ -22,7 +24,7 @@ var shepard = require('./shepard');
 var credentials = require('./credentials');
 var source = shepard.cloudFactory.issue('s3', credentials);
 console.log(source);
-shepard.s3Cloud.test();
+shepard. s3Cloud.test();
 
 // console.log( source.printObjects( 'gigofbuffalos', ' ') );
 
